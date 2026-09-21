@@ -55,6 +55,8 @@ python -m unittest discover -s tests -p "test_*.py" -v
 python scripts/gerar_relatorio.py
 ```
 
+Sem `--with-devices`, os dois CSVs relacionados aos inversores são recriados apenas com o cabeçalho. Isso evita que uma execução parcial reutilize silenciosamente dados de uma coleta anterior.
+
 ## Validação manual do SQL
 
 Abra `delfos.db` em uma ferramenta compatível com SQLite e execute `sql/consultas_entrega.sql`.

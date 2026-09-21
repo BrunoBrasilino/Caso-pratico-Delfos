@@ -2,7 +2,6 @@ import argparse
 import csv
 import json
 import sqlite3
-from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 from urllib.request import urlopen
@@ -122,6 +121,7 @@ def compare(db_fields, db_daily, portal_fields, portal_daily):
     for field_id in field_ids:
         db_field = db_fields.get(field_id, {})
         portal_field = portal_fields.get(field_id, {})
+        has_daily_difference = False
 
         db_total = sum(db_daily.get((field_id, day), 0.0) for day in all_dates)
         portal_total = sum(portal_daily.get((field_id, day), 0.0) for day in all_dates)
@@ -143,6 +143,7 @@ def compare(db_fields, db_daily, portal_fields, portal_daily):
                 continue
             daily_diff = (db_value or 0.0) - (portal_value or 0.0)
             if abs(daily_diff) > 0.05 or db_value is None or portal_value is None:
+                has_daily_difference = True
                 daily_diff_rows.append(
                     {
                         "solar_field_id": field_id,
@@ -180,7 +181,14 @@ def compare(db_fields, db_daily, portal_fields, portal_daily):
                 ),
                 "missing_dates_in_delfos": ";".join(missing_in_db),
                 "missing_dates_in_portal": ";".join(missing_in_portal),
-                "status": "bate" if abs(diff) <= 0.05 and not missing_in_db and not missing_in_portal else "diverge",
+                "status": (
+                    "bate"
+                    if abs(diff) <= 0.05
+                    and not missing_in_db
+                    and not missing_in_portal
+                    and not has_daily_difference
+                    else "diverge"
+                ),
             }
         )
 
@@ -238,25 +246,24 @@ def main():
         daily_diff_rows,
     )
 
-    if args.with_devices:
-        write_csv(
-            out_dir / "portal_dispositivos.csv",
-            [
-                "solar_field_id",
-                "device_id",
-                "device_name",
-                "model",
-                "modules",
-                "capacity_kwp",
-                "status",
-            ],
-            device_rows,
-        )
-        write_csv(
-            out_dir / "portal_inversores_daily_julho.csv",
-            ["solar_field_id", "device_id", "device_name", "date", "energy_kwh"],
-            device_daily_rows,
-        )
+    write_csv(
+        out_dir / "portal_dispositivos.csv",
+        [
+            "solar_field_id",
+            "device_id",
+            "device_name",
+            "model",
+            "modules",
+            "capacity_kwp",
+            "status",
+        ],
+        device_rows,
+    )
+    write_csv(
+        out_dir / "portal_inversores_daily_julho.csv",
+        ["solar_field_id", "device_id", "device_name", "date", "energy_kwh"],
+        device_daily_rows,
+    )
 
     print("Resumo da conciliacao de julho/2026")
     for row in summary_rows:

@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output" / "pdf" / "relatorio_conciliacao_julho_2026.pdf"
 LOGO = ROOT / "assets" / "delfos_logo.png"
 REPOSITORY_URL = "https://github.com/BrunoBrasilino/Caso-pratico-Delfos/tree/main"
-AUTHOR = "Bruno Brasilino"
+AUTHOR = "Bruno Nascimento Brasilino de Freitas"
 
 ORANGE = colors.HexColor("#D55E23")
 ORANGE_DARK = colors.HexColor("#A84317")
@@ -357,7 +357,7 @@ def architecture_diagram():
     box(0, 25, 95, 42, "Banco Delfos", "SQLite")
     box(137, 62, 118, 48, "Coleta e conciliação", "Python", primary=True)
     box(297, 62, 88, 48, "Evidências", "5 arquivos CSV")
-    box(425, 101, 80, 40, "Validação", "4 testes")
+    box(425, 101, 80, 40, "Validação", "7 testes")
     box(425, 24, 80, 40, "Comunicação", "relatório PDF")
 
     arrow(95, 121, 137, 94)
@@ -365,6 +365,61 @@ def architecture_diagram():
     arrow(255, 86, 297, 86)
     arrow(385, 86, 425, 121)
     arrow(385, 86, 425, 44)
+    return drawing
+
+
+def future_architecture_diagram():
+    drawing = Drawing(505, 205)
+
+    def box(x, y, width, height, title, detail, primary=False):
+        drawing.add(Rect(
+            x, y, width, height,
+            fillColor=ORANGE if primary else LIGHT,
+            strokeColor=ORANGE if primary else MID,
+            strokeWidth=0.9,
+        ))
+        text_color = WHITE if primary else GRAPHITE
+        drawing.add(String(
+            x + width / 2, y + height / 2 + 4, title,
+            textAnchor="middle", fontName="Century-Bold", fontSize=7.5,
+            fillColor=text_color,
+        ))
+        drawing.add(String(
+            x + width / 2, y + height / 2 - 9, detail,
+            textAnchor="middle", fontName="Century", fontSize=6.2,
+            fillColor=text_color,
+        ))
+
+    def arrow(x1, y1, x2, y2):
+        drawing.add(Line(x1, y1, x2 - 6, y2, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+        drawing.add(Polygon(
+            [x2 - 6, y2 - 3.3, x2, y2, x2 - 6, y2 + 3.3],
+            fillColor=ORANGE_DARK, strokeColor=ORANGE_DARK,
+        ))
+
+    box(0, 145, 91, 38, "Fontes", "portal + base interna")
+    box(120, 145, 98, 38, "Orquestração", "agenda + retentativas")
+    box(247, 145, 112, 38, "Conciliação", "regras + evidências", primary=True)
+    box(388, 145, 117, 38, "Persistência", "PostgreSQL + snapshots")
+
+    box(20, 45, 120, 38, "Dashboard", "filtros + investigação")
+    box(192, 45, 120, 38, "Alertas", "novas divergências")
+    box(365, 45, 120, 38, "Exportações", "CSV + PDF formal")
+
+    arrow(91, 164, 120, 164)
+    arrow(218, 164, 247, 164)
+    arrow(359, 164, 388, 164)
+
+    drawing.add(Line(446, 145, 446, 112, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+    drawing.add(Line(80, 112, 446, 112, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+    drawing.add(Line(80, 112, 80, 89, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+    drawing.add(Line(252, 112, 252, 89, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+    drawing.add(Line(425, 112, 425, 89, strokeColor=ORANGE_DARK, strokeWidth=1.2))
+    for x in (80, 252, 425):
+        drawing.add(Polygon(
+            [x - 3.3, 89, x, 83, x + 3.3, 89],
+            fillColor=ORANGE_DARK, strokeColor=ORANGE_DARK,
+        ))
     return drawing
 
 
@@ -476,7 +531,11 @@ def build():
         ("07", "Consultas SQL e resultados", "9"),
         ("08", "Conciliação e evidências", "10"),
         ("09", "Decisões, limites e evolução", "11"),
-        ("10", "Reprodutibilidade e anexos", "12"),
+        ("10", "Ferramentas, IA e reprodutibilidade", "12"),
+        ("ANEXOS", "", ""),
+        ("A", "Arquitetura futura do produto", "13"),
+        ("B", "Operação e implantação", "14"),
+        ("C", "Repositório da versão 1.0", "15"),
     ]
     toc = Table([
         [p(number, styles["toc_number"]), p(title, styles["toc"]), p(page, styles["toc_number"])]
@@ -489,6 +548,12 @@ def build():
         ("ALIGN", (-1, 0), (-1, -1), "RIGHT"),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("SPAN", (0, 10), (-1, 10)),
+        ("BACKGROUND", (0, 10), (-1, 10), ORANGE_PALE),
+        ("LINEABOVE", (0, 10), (-1, 10), 0.8, ORANGE),
+        ("LINEBELOW", (0, 10), (-1, 10), 0.8, ORANGE),
+        ("TOPPADDING", (0, 10), (-1, 10), 7),
+        ("BOTTOMPADDING", (0, 10), (-1, 10), 7),
     ]))
     story += [toc, Spacer(1, 16), callout(
         "Como ler este relatório",
@@ -555,7 +620,7 @@ def build():
     ))
     story += [
         p("Regras de cálculo", styles["h1"]),
-        p("A diferença é calculada como <b>Delfos - portal</b>. O percentual usa o portal como denominador. Uma usina é marcada como conforme somente quando o valor absoluto da diferença é menor ou igual a 0,05 kWh e não existem datas ausentes em nenhuma fonte. O yield específico do banco é a geração mensal dividida pela capacidade cadastrada.", styles["body"]),
+        p("A diferença é calculada como <b>Delfos - portal</b>. O percentual usa o portal como denominador. Uma usina é marcada como conforme somente quando o valor absoluto da diferença mensal é menor ou igual a 0,05 kWh, não existem datas ausentes em nenhuma fonte e nenhuma diferença diária supera essa tolerância. O yield específico do banco é a geração mensal dividida pela capacidade cadastrada.", styles["body"]),
         PageBreak(),
     ]
 
@@ -577,10 +642,10 @@ def build():
     ))
     story += [
         p("Funcionamento da coleta", styles["h1"]),
-        p("O programa primeiro obtém as cinco usinas. Para cada usina, consulta a série diária consolidada e o cadastro de dispositivos. Quando a opção <b>--with-devices</b> é usada, percorre os 28 inversores e baixa a série diária de cada um. O período é filtrado no momento da leitura, antes de os registros serem gravados.", styles["body"]),
+        p("O programa primeiro obtém as cinco usinas e, para cada uma, consulta a série diária consolidada. Quando a opção <b>--with-devices</b> é usada, também consulta o cadastro de dispositivos, percorre os 28 inversores e baixa a série diária de cada um. Sem a opção, os dois CSVs de dispositivos são recriados apenas com o cabeçalho, impedindo a reutilização silenciosa de dados antigos. O período é filtrado no momento da leitura, antes de os registros serem gravados.", styles["body"]),
         callout(
             "39 requisições controladas",
-            "A execução realiza 1 chamada para a lista de usinas, 5 para as séries das usinas, 5 para os cadastros de dispositivos e 28 para as séries dos inversores. Todas são operações GET, com timeout de 30 segundos e sem alteração no sistema de origem.",
+            "A execução completa com <b>--with-devices</b> realiza 1 chamada para a lista de usinas, 5 para as séries das usinas, 5 para os cadastros de dispositivos e 28 para as séries dos inversores. Todas são operações GET, com timeout de 30 segundos e sem alteração no sistema de origem.",
             styles,
         ),
         p("Por que usar a API", styles["h1"]),
@@ -591,7 +656,7 @@ def build():
     # 6. Implementação da conciliação
     story += section_header(
         "04", "Implementação da conciliação",
-        "Responsabilidades de cada parte de scripts/automacao_conciliacao.py e estruturas utilizadas no processamento.",
+        "Responsabilidades de cada parte de <b>scripts/automacao_conciliacao.py</b> e estruturas utilizadas no processamento.",
         styles,
     )
     story.append(data_table(
@@ -609,7 +674,7 @@ def build():
         p("Estruturas de comparação", styles["h1"]),
         p("A chave principal é a tupla <b>(solar_field_id, date)</b>. Essa escolha permite consultar diretamente o valor de uma usina em um dia, detectar ausência sem depender da ordem dos registros e somar o mês percorrendo um conjunto fixo de 31 datas. Energia e capacidade são convertidas para números antes dos cálculos.", styles["body"]),
         p("Como uma divergência é classificada", styles["h1"]),
-        p("Para cada data, o script distingue três situações: <b>missing_in_delfos</b>, quando só o portal possui o registro; <b>missing_in_portal</b>, quando só o banco possui; e <b>value_mismatch</b>, quando ambos existem, mas a diferença supera 0,05 kWh. O resumo mensal também registra contagem de dias, capacidades e listas de datas ausentes.", styles["body"]),
+        p("Para cada data, o script distingue três situações: <b>missing_in_delfos</b>, quando só o portal possui o registro; <b>missing_in_portal</b>, quando só o banco possui; e <b>value_mismatch</b>, quando ambos existem, mas a diferença supera 0,05 kWh. O status <b>bate</b> exige total mensal dentro da tolerância, cobertura completa e nenhuma divergência diária; diferenças positivas e negativas que se anulem no mês continuam classificadas como divergência.", styles["body"]),
         p("Investigação por inversor", styles["h1"]),
         p("A soma dos inversores é agrupada por usina e data. Na SF-001, a série <b>portal - Delfos</b> foi comparada com cada série individual. Somente o SF-001-INV-05 coincide em todas as 31 datas; a soma mensal e a capacidade do mesmo inversor também fecham com as duas lacunas observadas.", styles["body"]),
         p("Comportamento em caso de erro", styles["h1"]),
@@ -640,10 +705,10 @@ def build():
         p("sql/consultas_entrega.sql", styles["h1"]),
         p("O arquivo mantém as duas consultas solicitadas fora do código de apresentação. Elas podem ser executadas isoladamente em qualquer ferramenta compatível com SQLite. Essa separação facilita revisão técnica e evita que a lógica do banco fique escondida no gerador do PDF.", styles["body"]),
         p("Formato das evidências", styles["h1"]),
-        p("CSV foi escolhido por ser simples, portátil e auditável. Ele não suporta cor, negrito ou realce persistente; por isso, as linhas críticas são reproduzidas com destaque visual na seção 08 deste relatório. As chaves exibidas permitem localizar exatamente os mesmos registros nos arquivos brutos.", styles["body"]),
+        p("O formato CSV foi escolhido por ser simples, portátil e auditável. Ele não suporta cor, negrito ou realce persistente; por isso, as linhas críticas são reproduzidas com destaque visual na seção 08 deste relatório. As chaves exibidas permitem localizar exatamente os mesmos registros nos arquivos brutos.", styles["body"]),
         callout(
             "Papéis diferentes, mesma execução",
-            "Os CSVs preservam a evidência detalhada; os testes verificam as regras; o PDF comunica uma execução fechada. Em uma evolução futura, um dashboard seria a interface de acompanhamento contínuo sem substituir esses três artefatos.",
+            "Os CSVs preservam a evidência detalhada; os testes verificam as regras; o PDF comunica uma execução fechada. Em uma evolução futura, um dashboard seria a interface de acompanhamento contínuo sem substituir esses três artefatos. <i>(Vide Anexo A)</i>",
             styles,
         ),
         PageBreak(),
@@ -652,12 +717,12 @@ def build():
     # 8. Testes
     story += section_header(
         "06", "Testes automatizados",
-        "Verificações executadas sobre os CSVs e o SQLite para reduzir o risco de conclusões incorretas.",
+        "Verificações sobre a regra de comparação, os artefatos gerados, os CSVs e o SQLite.",
         styles,
     )
     story += [
         p("Como a suíte funciona", styles["h1"]),
-        p("Ao iniciar, <b>tests/test_conciliacao.py</b> carrega os cinco resultados relevantes e consulta novamente a tabela energy_daily do SQLite. Os registros são organizados em conjuntos e dicionários para que cada asserção compare chaves e valores, e não apenas totais já agregados. A suíte usa a biblioteca padrão unittest e pode ser executada sem serviços adicionais.", styles["body"]),
+        p("A suíte combina testes unitários da função <b>compare</b> com verificações dos cinco CSVs e uma nova consulta à tabela energy_daily do SQLite. Assim, valida tanto a regra que produz o status quanto as evidências do caso. Os registros são organizados por chave e valor, sem depender apenas de totais já agregados.", styles["body"]),
     ]
     story.append(data_table(
         ["Teste", "O que faz", "Garantia fornecida"],
@@ -666,17 +731,18 @@ def build():
             ("Fechamento por inversor", "Soma os inversores por usina e data e compara com a série consolidada, tolerância 0,05 kWh", "A decomposição por equipamento reproduz a fonte"),
             ("Causa da SF-001", "Compara portal - banco com INV-05 em 31 dias, no mês e na capacidade, tolerância 0,01 kWp", "A lacuna corresponde exatamente ao equipamento identificado"),
             ("Causa da SF-005", "Compara os conjuntos de datas do portal e banco", "08/07 é a única data ausente e não há datas extras"),
+            ("Regra e artefatos", "Testa séries iguais, diferenças diárias compensatórias e execução sem coleta por inversor", "Evita falso 'bate' e reaproveitamento silencioso de CSVs antigos"),
         ], [105, 260, 140], styles,
     ))
     story += [
         p("Critérios de aprovação", styles["h1"]),
-        p("Os quatro testes precisam terminar com status <b>OK</b>. Qualquer data inesperada, diferença acima da tolerância ou mudança na identidade do inversor faz a execução falhar e exibe a chave responsável. Isso transforma as principais conclusões do relatório em regras verificáveis.", styles["body"]),
+        p("Todos os testes precisam terminar com status <b>OK</b>. Qualquer data inesperada, diferença acima da tolerância, falso status mensal ou mudança na identidade do inversor faz a execução falhar e exibe a chave responsável.", styles["body"]),
         p("O que os testes não provam", styles["h1"]),
         p("A suíte confirma consistência entre os arquivos coletados, o SQLite entregue e as hipóteses do diagnóstico. Ela não valida a instrumentação física da usina, a cadeia interna de ingestão da Delfos nem a permanência futura do contrato da API. Esses riscos exigiriam telemetria bruta, logs e testes de integração em ambiente operacional.", styles["body"]),
         p("Resultado desta execução", styles["h1"]),
         callout(
-            "4 de 4 testes aprovados - status OK",
-            "Cobertura diária, fechamento por inversor, diagnóstico da SF-001 e data ausente da SF-005 foram confirmados na execução final.",
+            "Suíte completa aprovada - status OK",
+            "Além das evidências do caso, foram confirmadas a regra contra divergências compensatórias e a substituição de arquivos antigos em execuções sem inversores.",
             styles,
         ),
         PageBreak(),
@@ -705,7 +771,7 @@ def build():
         [75, 315, 115], styles, highlight_rows=[4],
     ))
     story += [
-        p("O resultado sinaliza imediatamente a SF-005 com 30 dias. A SQL identifica a ausência de cobertura; a comparação diária localiza a data e quantifica o impacto.", styles["small"]),
+        p("O resultado sinaliza imediatamente a SF-005 com 30 dias. A consulta SQL identifica a ausência de cobertura; a comparação diária localiza a data e quantifica o impacto.", styles["small"]),
         PageBreak(),
     ]
 
@@ -754,7 +820,18 @@ def build():
         )], [172, 105, 76, 76, 76], styles, highlight_rows=[0],
     ))
     story += [
-        p("O CSV bruto não armazena cores. O realce acima pertence ao relatório e serve para orientar a localização das mesmas chaves nos arquivos entregues.", styles["small"]),
+        p("Ações corretivas recomendadas", styles["h1"]),
+        p("As evidências indicam o que deve ser corrigido, mas a confirmação da etapa interna responsável depende dos logs e cadastros da plataforma.", styles["small"]),
+    ]
+    story.append(data_table(
+        ["Escopo", "Ação", "Validação após correção"],
+        [
+            ("SF-001", "Verificar cadastro, vínculo e mapeamento do INV-05; corrigir a etapa que deixou energia e capacidade fora do agregado e reprocessar 01 a 31/07", "31 dias conciliados; diferenças de energia e de capacidade iguais a zero"),
+            ("SF-005", "Investigar a ingestão de 08/07, recuperar o registro de 4.258,5 kWh a partir da fonte e reprocessar a data", "31 dias registrados e ausência removida"),
+            ("Fechamento", "Executar novamente coleta, SQL, testes e geração do relatório", "Cinco usinas com status bate e nenhuma divergência diária"),
+        ], [72, 288, 145], styles, highlight_rows=[0, 1],
+    ))
+    story += [
         PageBreak(),
     ]
 
@@ -772,7 +849,7 @@ def build():
             ("SQLite", "É o formato entregue e permite análise local sem servidor", "Não atende histórico multiusuário em produção"),
             ("CSV", "Portátil, auditável e fácil de abrir em diferentes ferramentas", "Não preserva formatação nem experiência interativa"),
             ("unittest", "Transforma as principais conclusões em regras executáveis", "Cobre o caso e não toda a cadeia operacional"),
-            ("ReportLab/PDF", "Produz documento estável, versionável e compartilhável", "Relatório é estático e sua narrativa ainda conhece o caso"),
+            ("ReportLab/PDF", "Produz documento estável, versionável e compartilhável", "O relatório é estático e sua narrativa ainda conhece o caso"),
         ], [84, 247, 174], styles,
     ))
     story += [
@@ -785,19 +862,38 @@ def build():
         p("<b>4. Alertas e acompanhamento.</b> Executar a conciliação de forma recorrente e notificar somente novas divergências ou mudanças de causa.", styles["body_compact"]),
         callout(
             "Arquitetura futura sugerida",
-            "O dashboard seria a interface para o usuário; um banco histórico sustentaria tendências e reprocessamentos; os CSVs permaneceriam como evidência de cada execução; os testes protegeriam as regras; e o PDF continuaria como registro formal para compartilhamento.",
+            "O dashboard seria a interface para o usuário; um banco histórico sustentaria tendências e reprocessamentos; os CSVs permaneceriam como evidência de cada execução; os testes protegeriam as regras; e o PDF continuaria como registro formal. Os anexos A e B detalham componentes, fluxo, dados e implantação dessa evolução.",
             styles,
         ),
         PageBreak(),
     ]
 
-    # 12. Reprodutibilidade e anexos
+    # 12. Ferramentas, IA e reprodutibilidade
     story += section_header(
-        "10", "Reprodutibilidade e anexos",
-        "Comandos, validações independentes, uso de IA, dados adicionais necessários e acesso ao código-fonte.",
+        "10", "Ferramentas, IA e reprodutibilidade",
+        "Ferramentas efetivamente utilizadas, responsabilidade por etapa e controles aplicados aos resultados.",
         styles,
     )
     story += [
+        callout(
+            "Ferramentas de IA utilizadas",
+            "Foram utilizadas somente ferramentas da OpenAI: <b>ChatGPT</b> no apoio à análise e comunicação, e <b>Codex</b> na execução do trabalho sobre os arquivos do projeto. O VS Code foi usado como ambiente local de inspeção e revisão pelo candidato.",
+            styles,
+        ),
+        p("Papel de cada ferramenta", styles["h1"]),
+    ]
+    story.append(data_table(
+        ["Ferramenta", "Uso no projeto", "Responsabilidade prática"],
+        [
+            ("ChatGPT", "Discussão do problema, refinamento da metodologia, crítica da solução e organização da narrativa", "Apoiar raciocínio, explicações e revisão do texto"),
+            ("Codex", "Acesso à pasta, leitura do PDF e banco, inspeção da API, criação dos scripts, execução de SQL e testes, geração e revisão visual do relatório", "Operar o projeto e produzir artefatos verificáveis"),
+            ("VS Code", "Abertura da mesma pasta local, inspeção dos arquivos, leitura do código e revisão dos resultados pelo candidato", "Ambiente de desenvolvimento e conferência humana"),
+        ],
+        [82, 273, 150], styles,
+    ))
+    story += [
+        p("Responsabilidade humana", styles["h1"]),
+        p("O candidato definiu os objetivos, direcionou as revisões, avaliou a apresentação e conferiu código, dados e artefatos no VS Code. As ferramentas de IA aceleraram investigação, implementação e documentação, mas as conclusões foram aceitas somente após controles numéricos e revisão humana.", styles["body"]),
         p("Como reproduzir", styles["h1"]),
         Preformatted(
             "python scripts/automacao_conciliacao.py --with-devices\n"
@@ -805,18 +901,120 @@ def build():
             "python scripts/gerar_relatorio.py", styles["code"],
         ),
         p("Controles independentes", styles["h1"]),
-        p("Os totais obtidos pela soma das séries JSON foram comparados com os valores exibidos na visão mensal do portal. As consultas SQL foram executadas diretamente no SQLite. A soma dos inversores reproduziu diariamente cada usina e os quatro testes automatizados passaram. Essas verificações usam caminhos diferentes para reduzir o risco de um único erro ser repetido em todo o relatório.", styles["body"]),
+        p("Os totais obtidos pela soma das séries JSON foram comparados com os valores exibidos na visão mensal do portal. As consultas SQL foram executadas diretamente no SQLite. A soma dos inversores reproduziu diariamente cada usina e toda a suíte automatizada passou, incluindo os testes da regra de status. Esses caminhos independentes reduzem o risco de um único erro ser repetido em todo o relatório.", styles["body"]),
         p("Limite do diagnóstico da SF-001", styles["h1"]),
-        p("Os dados provam que o INV-05 ficou fora do agregado do banco, mas não permitem localizar a etapa interna responsável. Para distinguir falha de cadastro, associação ou ingestão, seriam necessários o histórico de vínculo entre usina e inversor, a configuração do coletor, os identificadores de mapeamento, logs e arquivos brutos. Não há evidência de falha física: o portal mostra o equipamento online e gerando.", styles["body"]),
-        p("Uso de inteligência artificial", styles["h1"]),
-        p("IA foi utilizada para interpretar o enunciado, estruturar a investigação, apoiar o desenvolvimento dos scripts, organizar testes e redigir o relatório. Nenhuma conclusão foi aceita apenas por geração textual: SQL, totais da interface, séries diárias, soma dos inversores e testes automatizados foram usados como controles verificáveis.", styles["body"]),
-        p("Anexo A - repositório", styles["h1"]),
+        p("Os dados provam que o INV-05 ficou fora do agregado do banco, mas não permitem localizar a etapa interna responsável. Para distinguir falha de cadastro, associação ou ingestão, seriam necessários o histórico de vínculos, a configuração do coletor, os identificadores de mapeamento, os logs e os arquivos brutos. Não há evidência de falha física: o portal mostra o equipamento online e gerando.", styles["body"]),
+        PageBreak(),
+    ]
+
+    # 13. Anexo A - arquitetura futura
+    story += section_header(
+        "", "Anexo A - Arquitetura futura do produto",
+        "Desenho proposto para transformar a conciliação pontual em um produto recorrente, auditável e multiusuário.",
+        styles,
+    )
+    story += [future_architecture_diagram(), p("Componentes propostos", styles["h1"])]
+    story.append(data_table(
+        ["Camada", "Implementação inicial", "Responsabilidade"],
+        [
+            ("Interface", "Streamlit", "Filtros, status por usina, gráfico diário, detalhe por inversor e exportação"),
+            ("Aplicação", "Pacote Python de conciliação", "Regras de comparação independentes da tela e do relatório"),
+            ("Integrações", "Conectores HTTP e banco", "Coletar cada fonte com timeout, autenticação, retentativas e validação de esquema"),
+            ("Orquestração", "Agendador e fila de execução", "Criar execuções, controlar falhas parciais e permitir reprocessamento"),
+            ("Persistência", "PostgreSQL + snapshots", "Histórico, resultados, evidências, auditoria e arquivos brutos"),
+            ("Observabilidade", "Logs, métricas e alertas", "Acompanhar duração, falhas, volume e novas divergências"),
+        ],
+        [88, 157, 260], styles,
+    ))
+    story += [
+        p("Fluxo de uma execução", styles["h1"]),
+        p("<b>1. Disparo.</b> Um agendamento diário ou uma solicitação manual cria uma execução com período, fontes, versão das regras e responsável.", styles["body_compact"]),
+        p("<b>2. Coleta e staging.</b> Os conectores capturam portal e base interna, preservam snapshots e normalizam chaves, datas, energia e capacidade.", styles["body_compact"]),
+        p("<b>3. Qualidade e conciliação.</b> Regras de cobertura, duplicidade e fechamento são executadas antes dos deltas mensais, diários e por inversor.", styles["body_compact"]),
+        p("<b>4. Persistência.</b> Resultado, evidências, status dos testes e causas conhecidas ficam ligados ao identificador da execução.", styles["body_compact"]),
+        p("<b>5. Consumo.</b> O dashboard mostra o estado atual e histórico; alertas notificam mudanças; CSV e PDF registram a execução para auditoria.", styles["body_compact"]),
+        PageBreak(),
+    ]
+
+    # 14. Anexo B - operação e implantação
+    story += section_header(
+        "", "Anexo B - Operação e implantação",
+        "Modelo mínimo de dados, experiência de uso e plano incremental de implantação da arquitetura futura.",
+        styles,
+    )
+    story += [p("Modelo de dados mínimo", styles["h1"])]
+    story.append(data_table(
+        ["Entidade", "Conteúdo principal", "Finalidade"],
+        [
+            ("execution", "período, início/fim, status, versão das regras e origem", "Rastrear cada processamento"),
+            ("source_snapshot", "fonte, arquivo ou hash, horário e metadados", "Preservar o material recebido"),
+            ("energy_daily", "execução, usina, inversor, data, energia e capacidade", "Base normalizada para comparação"),
+            ("reconciliation_result", "totais, deltas, cobertura, severidade e causa", "Alimentar dashboard e histórico"),
+            ("evidence", "chave, valor, regra, mensagem e referência ao registro", "Explicar cada divergência"),
+            ("notification", "destinatário, evento, envio e confirmação", "Evitar alertas duplicados"),
+        ],
+        [108, 230, 167], styles,
+    ))
+    story += [p("Loop de uso do usuário", styles["h1"])]
+    story.append(data_table(
+        ["Momento", "Experiência esperada"],
+        [
+            ("Acompanhamento", "Abrir o dashboard e ver usinas conformes, divergentes, pendentes ou com falha de coleta"),
+            ("Investigação", "Selecionar período e usina, comparar séries e abrir as evidências por data ou inversor"),
+            ("Tratamento", "Registrar causa, responsável, ação e decisão de reprocessamento"),
+            ("Fechamento", "Executar novamente as regras e exportar CSV ou PDF com identificação da execução"),
+        ],
+        [110, 395], styles,
+    ))
+    story += [p("Plano incremental", styles["h1"])]
+    story.append(data_table(
+        ["Fase", "Escopo"],
+        [
+            ("1. MVP", "Reaproveitar o motor atual, parametrizar período, adicionar Streamlit, PostgreSQL e agendamento simples"),
+            ("2. Piloto", "Autenticação, logs, retentativas, histórico, tratamento de ocorrências e alertas"),
+            ("3. Escala", "API de serviço, workers, fila, armazenamento de snapshots, perfis de acesso e monitoramento"),
+        ],
+        [82, 423], styles,
+    ))
+    story += [
+        PageBreak(),
+    ]
+
+    # 15. Anexo C - repositório da versão atual
+    story += section_header(
+        "", "Anexo C - Repositório da versão 1.0",
+        "Acesso ao código e aos artefatos implementados nesta entrega, separados da arquitetura futura proposta.",
+        styles,
+    )
+    story += [
+        callout(
+            "Escopo da versão publicada",
+            "O repositório corresponde à <b>versão 1.0</b> analisada neste relatório: coleta do portal, leitura do SQLite, conciliação de julho de 2026, consultas SQL, testes automatizados, evidências CSV e geração do PDF.",
+            styles,
+        ),
+        p("Link de acesso", styles["h1"]),
         p(
             f'O código-fonte, as consultas, os testes, os CSVs e este relatório estão disponíveis em:<br/><link href="{REPOSITORY_URL}" color="#A84317"><u>{REPOSITORY_URL}</u></link>',
             styles["body_compact"],
         ),
-        p("Conteúdo principal: scripts/automacao_conciliacao.py, scripts/gerar_relatorio.py, tests/test_conciliacao.py, sql/consultas_entrega.sql e outputs/.", styles["small"]),
-        Spacer(1, 10),
+        p("Conteúdo da entrega", styles["h1"]),
+    ]
+    story.append(data_table(
+        ["Caminho", "Conteúdo"],
+        [
+            ("scripts/automacao_conciliacao.py", "Coleta, normalização, comparação e geração dos CSVs"),
+            ("scripts/gerar_relatorio.py", "Validações adicionais e composição deste relatório"),
+            ("tests/test_conciliacao.py", "Sete testes automatizados da conciliação"),
+            ("sql/consultas_entrega.sql", "Consultas solicitadas no caso técnico"),
+            ("outputs/", "Dados coletados, comparação mensal e divergências diárias"),
+            ("output/pdf/", "Relatório técnico final"),
+        ],
+        [205, 300], styles,
+    ))
+    story += [
+        p("Separação da proposta futura", styles["h1"]),
+        p("O dashboard, o PostgreSQL histórico, a orquestração recorrente e os alertas descritos nos anexos A e B são uma proposta de evolução. Esses componentes <b>não estão implementados</b> no repositório da versão 1.0.", styles["body"]),
+        Spacer(1, 8),
         HRFlowable(width="100%", thickness=0.7, color=MID, spaceAfter=7),
         p("Fontes: enunciado 'Orientações Teste Tecnico - Estágio Analise de Dados e Automação.pdf'; banco local delfos.db; portal teste-pratico.performance.delfos.im; evidências da pasta outputs.", styles["small"]),
     ]
