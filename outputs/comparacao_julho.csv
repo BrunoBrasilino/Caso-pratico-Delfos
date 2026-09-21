@@ -1,0 +1,6 @@
+solar_field_id,name,delfos_total_kwh,portal_total_kwh,diff_kwh_delfos_minus_portal,diff_pct,delfos_days,portal_days,delfos_capacity_kwp,portal_capacity_kwp,capacity_diff_kwp,missing_dates_in_delfos,missing_dates_in_portal,status
+SF-001,Vale do Sol I,569911.6,625613.9,-55702.3,-8.9036,31,31,3868.7,4254.8,-386.1,,,diverge
+SF-002,Serra Azul,402938.1,402938.1,0.0,0.0,31,31,2797.2,2797.2,0.0,,,bate
+SF-003,Alvorada Norte,182733.0,182733.0,0.0,0.0,31,31,1502.28,1502.28,0.0,,,bate
+SF-004,Campo Verde II,864240.6,864240.6,0.0,0.0,31,31,5923.71,5923.71,0.0,,,bate
+SF-005,Riacho Fundo,130467.5,134726.0,-4258.5,-3.1609,30,31,949.39,949.39,0.0,2026-07-08,,diverge
