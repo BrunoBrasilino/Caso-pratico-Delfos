@@ -2,6 +2,8 @@
 
 Projeto desenvolvido para comparar a geração de julho de 2026 entre o portal Heliora, tratado como fonte da verdade, e o banco SQLite `delfos.db`.
 
+O relatório final possui capa, sumário, resumo executivo, metodologia, arquitetura, detalhamento dos scripts e testes, consultas SQL, evidências destacadas, limitações e anexo com o repositório. A composição visual segue a identidade apresentada no material oficial da Delfos.
+
 ## Resultado principal
 
 - SF-002, SF-003 e SF-004 coincidem diariamente entre portal e banco.
@@ -34,6 +36,7 @@ GET /api/devices/{device_id}/energy_daily.json
 ## Estrutura do projeto
 
 ```text
+assets/     logotipo extraído do material oficial para composição do relatório
 docs/       plano e documentação da análise
 output/     relatório final em PDF
 outputs/    arquivos CSV produzidos pela coleta
