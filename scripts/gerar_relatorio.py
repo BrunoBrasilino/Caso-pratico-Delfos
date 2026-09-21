@@ -11,6 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.graphics.shapes import Drawing, Line, Polygon, Rect, String
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
@@ -183,33 +184,66 @@ def data_table(headings, rows, widths, styles):
     return table
 
 
-def architecture_table(styles):
-    stages = [
-        ("1. Descoberta", "Lista as usinas e lê capacidade, localização e identificador."),
-        ("2. Coleta", "Faz requisições GET aos JSONs diários de usinas e inversores."),
-        ("3. Normalização", "Filtra 01 a 31/07/2026 e usa (usina, data) como chave de comparação."),
-        ("4. Conciliação", "Agrega energia, conta dias, calcula deltas e procura datas ou equipamentos ausentes."),
-        ("5. Evidências", "Grava CSVs, executa testes automáticos e alimenta o relatório."),
-    ]
-    cells = []
-    for index, (stage, description) in enumerate(stages):
-        cells.append([
-            p(stage, styles["tablehead"]),
-            p(description, styles["cell"]),
-        ])
-    table = Table(cells, colWidths=[105, 400], hAlign="LEFT")
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#195D59")),
-        ("ROWBACKGROUNDS", (1, 0), (1, -1), [colors.white, colors.HexColor("#F1F5F4")]),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#B7C9C6")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#D8E2E0")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("TOPPADDING", (0, 0), (-1, -1), 7),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-    ]))
-    return table
+def architecture_diagram():
+    drawing = Drawing(505, 145)
+    green = colors.HexColor("#195D59")
+    pale = colors.HexColor("#E7F0EE")
+    ink = colors.HexColor("#172329")
+    border = colors.HexColor("#9CB8B4")
+
+    def box(x, y, width, height, title, detail, primary=False):
+        drawing.add(
+            Rect(
+                x,
+                y,
+                width,
+                height,
+                fillColor=green if primary else pale,
+                strokeColor=green if primary else border,
+                strokeWidth=0.8,
+            )
+        )
+        text_color = colors.white if primary else ink
+        drawing.add(String(
+            x + width / 2,
+            y + height / 2 + 4,
+            title,
+            textAnchor="middle",
+            fontName="Arial-Bold",
+            fontSize=8.2,
+            fillColor=text_color,
+        ))
+        drawing.add(String(
+            x + width / 2,
+            y + height / 2 - 9,
+            detail,
+            textAnchor="middle",
+            fontName="Arial",
+            fontSize=7.2,
+            fillColor=text_color,
+        ))
+
+    def arrow(x1, y1, x2, y2):
+        drawing.add(Line(x1, y1, x2 - 6, y2, strokeColor=green, strokeWidth=1.3))
+        drawing.add(Polygon(
+            [x2 - 6, y2 - 3.5, x2, y2, x2 - 6, y2 + 3.5],
+            fillColor=green,
+            strokeColor=green,
+        ))
+
+    box(0, 91, 96, 42, "Portal Heliora", "API JSON")
+    box(0, 18, 96, 42, "Banco Delfos", "SQLite")
+    box(145, 54, 112, 48, "Python", "coleta + conciliação", primary=True)
+    box(304, 54, 88, 48, "CSVs", "evidências")
+    box(435, 92, 70, 40, "Testes", "automáticos")
+    box(435, 19, 70, 40, "Relatório", "PDF")
+
+    arrow(96, 112, 145, 84)
+    arrow(96, 39, 145, 71)
+    arrow(257, 78, 304, 78)
+    arrow(392, 78, 435, 112)
+    arrow(392, 78, 435, 39)
+    return drawing
 
 
 def page_chrome(canvas, doc):
@@ -303,8 +337,8 @@ def build():
         PageBreak(),
         p("Arquitetura da automação", styles["title"]),
         p("A coleta consulta os mesmos arquivos JSON consumidos pela aplicação web. Não há automação de cliques nem leitura de HTML; são requisições HTTP GET somente para leitura.", styles["subtitle"]),
-        p("Fluxo do processamento", styles["h1"]),
-        architecture_table(styles),
+        p("Fluxo atual", styles["h1"]),
+        architecture_diagram(),
         p("Endpoints utilizados", styles["h1"]),
     ]
     story.append(data_table(
@@ -326,6 +360,34 @@ def build():
         p("<b>2.</b> Para cada usina, o programa soma a energia, conta datas, calcula Delfos menos portal, mede a diferença percentual e registra datas ausentes em cada fonte.", styles["body"]),
         p("<b>3.</b> Quando há divergência, a comparação desce para o nível diário. Na SF-001, a série portal menos Delfos foi comparada com cada inversor; apenas o INV-05 coincide nos 31 dias. Na SF-005, a diferença é um único registro ausente.", styles["body"]),
         p("<b>4.</b> O teste automático rejeita datas duplicadas ou faltantes no portal, confirma que a soma dos inversores fecha com cada usina e valida as causas identificadas.", styles["body"]),
+        PageBreak(),
+        p("Decisões técnicas e evolução", styles["title"]),
+        p("As tecnologias foram escolhidas para manter a solução pequena, reproduzível e auditável, sem adicionar infraestrutura desnecessária ao escopo do caso.", styles["subtitle"]),
+        p("Justificativa das escolhas", styles["h1"]),
+    ]
+    story.append(data_table(
+        ["Escolha", "Por que foi usada", "Limite consciente"],
+        [
+            ("Python", "Integra HTTP, JSON, CSV e SQLite com pouca dependência e código legível.", "Não oferece interface ao usuário por si só."),
+            ("Endpoints JSON", "São estruturados, reproduzíveis e menos frágeis que automação de cliques ou leitura de HTML.", "Dependem do contrato da API permanecer estável."),
+            ("SQLite", "É o formato original entregue e permite executar as consultas sem infraestrutura adicional.", "Não é a melhor opção para histórico multiusuário em produção."),
+            ("CSVs", "Mantêm evidências simples, portáveis e fáceis de auditar em diversas ferramentas.", "Não devem ser a interface principal de um usuário recorrente."),
+            ("Testes + PDF", "Os testes protegem as regras da conciliação; o PDF registra uma execução fechada e compartilhável.", "O PDF é estático e não oferece filtros ou investigação interativa."),
+        ],
+        [85, 250, 170],
+        styles,
+    ))
+    story += [
+        p("Autocrítica da implementação", styles["h1"]),
+        p("<b>Escopo específico.</b> O período, os totais de controle e parte da narrativa estão ligados a julho de 2026. Isso fortalece a validação deste caso, mas o motor precisaria ser parametrizado para uso recorrente.", styles["body"]),
+        p("<b>Coleta simples.</b> As 39 requisições são síncronas e suficientes para o pequeno volume analisado. Uma versão operacional deveria incluir retentativas, logs estruturados, controle de falhas parciais e tratamento de autenticação.", styles["body"]),
+        p("<b>Persistência em arquivos.</b> CSVs são adequados como evidência de uma execução, mas não substituem um repositório de histórico quando existem vários períodos, usuários ou reprocessamentos.", styles["body"]),
+        p("<b>Relatório acoplado ao caso.</b> O PDF comunica bem as conclusões atuais, porém sua narrativa conhece as divergências encontradas. Uma solução genérica deveria gerar textos e visualizações a partir das regras e dos resultados de cada execução.", styles["body"]),
+        p("Melhorias futuras", styles["h1"]),
+        p("<b>1. Generalização.</b> Receber período e fontes como parâmetros, remover totais fixos e transformar as verificações específicas em regras reutilizáveis de detecção de anomalias.", styles["body"]),
+        p("<b>2. Operação confiável.</b> Acrescentar retentativas, logs, identificação de cada execução, armazenamento histórico e agendamento da coleta.", styles["body"]),
+        p("<b>3. Dashboard.</b> Usar o mesmo motor por trás de uma interface, por exemplo em Streamlit, com seleção de período, atualização de dados, status por usina, gráfico diário Portal versus Delfos, investigação por inversor e exportação para CSV ou PDF.", styles["body"]),
+        p("<b>4. Papéis dos formatos.</b> Manter CSVs como evidência auditável e o PDF como fotografia formal de uma execução; o dashboard passaria a ser a interface principal para acompanhamento contínuo.", styles["body"]),
         PageBreak(),
         p("Arquivos e evidências", styles["title"]),
         p("Os CSVs preservam a granularidade necessária para reproduzir o diagnóstico e podem ser abertos em Excel, Google Sheets, Python ou ferramentas de banco de dados.", styles["subtitle"]),

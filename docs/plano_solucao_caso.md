@@ -132,3 +132,11 @@ python -m unittest discover -s tests -p "test_*.py" -v
 7. Uso de IA:
    - usada para leitura do enunciado, geracao de script e organizacao do relatorio;
    - resultados conferidos com SQL, UI do portal e comparacoes numericas.
+
+## Melhorias futuras
+
+- Parametrizar o periodo e remover controles fixos ligados a julho/2026.
+- Acrescentar retentativas, logs, identificacao de execucao e historico de resultados.
+- Separar o motor generico de conciliacao da narrativa especifica do caso.
+- Criar um dashboard para selecao de periodo, atualizacao, filtros por usina, comparacao diaria, investigacao por inversor e exportacao.
+- Manter CSVs como evidencias auditaveis e PDF como registro formal de cada execucao.
